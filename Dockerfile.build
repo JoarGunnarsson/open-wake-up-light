@@ -1,0 +1,9 @@
+FROM alpine:3.23.4
+
+WORKDIR /build/
+
+RUN apk --no-cache add python3 make bash
+
+RUN python -m venv /app/venv/
+ENV PATH="/app/venv/bin:$PATH"
+RUN pip install hatchling==1.31.0

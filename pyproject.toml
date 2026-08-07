@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
+[project]
+name = "open-wake-up-light"
+
+version = "0.0.0"
+
+dependencies = [
+    "paho-mqtt==2.1.0"
+]
+
+requires-python = "> 3.7"
+
+
+[project.scripts]
+alarm-server = "owul.main:main"
+
+
+[tool.hatch.build.targets.wheel]
+packages = ["owul"]
