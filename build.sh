@@ -26,6 +26,10 @@ build_app_container(){
     docker build -t "open-wake-up-light" .
 }
 
+build_nginx_container(){
+    docker build -t "reverse-proxy" -f Dockerfile.nginx .
+}
+
 ensure_venv_exists(){
     if test ! -d "$VENV"; then
         echo "Creating python virtual environment"
@@ -76,4 +80,5 @@ if test "$docker_flag" = true; then
     build_build_container
     build_repo
     build_app_container
+    build_nginx_container
 fi
