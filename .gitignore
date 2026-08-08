@@ -1,6 +1,8 @@
-dist/*
+dist
 
-*.pyc
-__pycache__/*
 
-venv/*
+__pycache__
+*.json
+.vscode
+
+venv

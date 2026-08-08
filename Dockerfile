@@ -10,3 +10,5 @@ ENV PATH="/app/venv/bin:$PATH"
 COPY dist/ /temp/dist/
 
 RUN pip install /temp/dist/*.whl
+
+ENTRYPOINT [ "alarm-server" ]

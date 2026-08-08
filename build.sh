@@ -9,7 +9,8 @@ show_help(){
     echo ""
     echo "options:"
     echo "  -h, --help              show this message and exit"
-    echo "  -venv                   install the project in 'editable mode' in the virtual environment"
+    echo "  --venv                  install the project in 'editable mode' in the virtual environment"
+    echo "  --docker                build the project docker container"
     echo ""
 }
 
@@ -42,14 +43,18 @@ PROJECT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 cd $PROJECT_DIR
 
 venv_flag=false
+docker_flag=false
 while test "$#" -gt 0; do
     case "$1" in 
-        --venv)
-            venv_flag=true
-            ;;
         -h|--help)
             show_help
             exit 0
+            ;;
+        --venv)
+            venv_flag=true
+            ;;
+        --docker)
+            docker_flag=true
             ;;
         *)
             echo "Unknown option '$1'"
@@ -67,7 +72,8 @@ if test "$venv_flag" = true; then
     install_in_venv
 fi
 
-build_build_container
-build_repo
-build_app_container
-
+if test "$docker_flag" = true; then
+    build_build_container
+    build_repo
+    build_app_container
+fi
