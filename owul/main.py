@@ -28,8 +28,6 @@ def update_alarms(alarms: dict):
 
 
 def run_alarms():
-    print(f"Found the following paired devices: {mqtt_client.get_devices()}")
-
     alarms = database.get("alarms")
     if alarms is None:
         database.update("alarms", {})
@@ -45,8 +43,10 @@ def run_alarms():
         time.sleep(max(0, desired_wake_time - time.monotonic()))
 
 
-
 def main():
+    devices = mqtt_client.get_devices()
+    print(f"Found the following paired devices: {devices}")
+
     alarm_thread = threading.Thread(target=run_alarms, daemon=True)
     alarm_thread.start()
 

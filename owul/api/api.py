@@ -44,9 +44,9 @@ def device_gradual_brightness(device):
     return NO_CONTENT
 
 
-@app.get("/alarms/get")
+@app.get("/alarms")
 def get_alarms():
-    return database.get("alarms")
+    return database.get("alarms", {})
 
 
 @app.delete("/alarms/<id>")

@@ -16,20 +16,25 @@ class LightStates:
 MOCK_ZIGBEE = os.getenv("MOCK_ZIGBEE")
 
 
+def data_to_json(msg: bytes):
+    return json.loads(msg.payload.decode("utf-8"))
+
 def get_health() -> dict:
     if MOCK_ZIGBEE:
         return {}
     
     msg = subscribe.simple("zigbee2mqtt/bridge/health", hostname=hostname, port=port)
-    health = json.loads(msg.payload.decode("utf-8"))
+    health = data_to_json(msg)
     return health
 
 
 def get_devices() -> list[str]:
-    # The device must check in to Z2M after a restart before it will be marked as available
-    health = get_health()
-    devices: dict = health.get("devices", {})
-    return list(devices.keys())
+    if MOCK_ZIGBEE:
+        return []
+    msg = subscribe.simple("zigbee2mqtt/bridge/devices", hostname=hostname, port=port)
+    devices = data_to_json(msg)
+    device_list = [dev["friendly_name"] for dev in devices if dev["type"] != "Coordinator"]
+    return device_list
 
 
 def set_device_state(friendly_name: str, payload: str):
