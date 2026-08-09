@@ -26,6 +26,10 @@
 }
 
 
+.button_description {
+  float: left;
+}
+
 #main {
   padding-left: 200px;
 }

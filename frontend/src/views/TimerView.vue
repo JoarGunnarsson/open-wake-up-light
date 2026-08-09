@@ -24,17 +24,13 @@ function addTimezoneToDatetime(date){
 
 async function addAlarm(){
   let url = "/api/alarms/create";
-  console.log(alarmTime.value);
-  console.log(addTimezoneToDatetime(alarmTime.value));
-  var response;
   var body = {
     devices: [control.value.selectedDevice],
     action: control.value.selectedAction,
     date: addTimezoneToDatetime(alarmTime.value),
     params: control.value.params,
   };
-  console.log(body);
-  response = await POST(url, body);
+  await POST(url, body);
 
 }
 </script>
@@ -44,6 +40,7 @@ async function addAlarm(){
 
   <DeviceControl ref="control"/>
   <div>
+    <div class="button_description">Alarm date:</div>
     <input v-model="alarmTime" type="datetime-local" step="1"/>
   </div>
 
