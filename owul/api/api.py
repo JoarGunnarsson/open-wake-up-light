@@ -18,27 +18,14 @@ def get_devices():
     return {"devices": mqtt_client.get_devices()}
 
 
-@app.route("/devices/<device>/state", methods=["PUT"])
+@app.route("/devices/<device>", methods=["PUT"])
 def device_state(device):
     ensure_device_exists(device)
 
-    action = DeviceAction("state", request.get_json())
-    action.perform_on_device(device)
-    return NO_CONTENT
-
-@app.route("/devices/<device>/brightness", methods=["PUT"])
-def device_brightness(device):
-    ensure_device_exists(device)
-
-    action = DeviceAction("brightness", request.get_json())
-    action.perform_on_device(device)
-    return NO_CONTENT
-
-
-@app.route("/devices/<device>/gradual_brightness", methods=["POST"])
-def device_gradual_brightness(device):
-    ensure_device_exists(device)
-    action = DeviceAction("gradual_brightness", request.get_json())
+    data = request.get_json()
+    action = data["action"]
+    params = data["params"]
+    action = DeviceAction(action, params)
     action.perform_on_device(device)
     return NO_CONTENT
 

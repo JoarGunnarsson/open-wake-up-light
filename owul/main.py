@@ -34,6 +34,7 @@ def run_alarms():
         alarms = {}
 
     while True:
+        alarms = database.get("alarms")
         current_time = time.monotonic()
         desired_wake_time = current_time + SLEEP_TIME
 

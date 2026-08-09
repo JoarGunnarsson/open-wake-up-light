@@ -1,9 +1,51 @@
 <script setup>
 import { ref } from 'vue'
+import { GET, PUT, POST } from "../request.js"
+import DeviceControl from "../components/ControlComponent.vue"
 
-const devices = ref(null);
+const control = ref(null);
+const alarmTime = ref(null);
+
+function addTimezoneToDatetime(date){
+  var currentDate = new Date();
+  var timezoneOffset = -currentDate.getTimezoneOffset();
+
+  var sign = "+";
+  if (timezoneOffset < 0){
+    timezoneOffset = -timezoneOffset;
+    sign = "-";
+  }
+
+  var hours = (timezoneOffset / 60).toString();
+  var minutes = (timezoneOffset % 60).toString();
+  var offsetString = `${sign}${hours.padStart(2, 0)}:${minutes.padStart(2, 0)}`
+  return date + offsetString;
+}
+
+async function addAlarm(){
+  let url = "/api/alarms/create";
+  console.log(alarmTime.value);
+  console.log(addTimezoneToDatetime(alarmTime.value));
+  var response;
+  var body = {
+    devices: [control.value.selectedDevice],
+    action: control.value.selectedAction,
+    date: addTimezoneToDatetime(alarmTime.value),
+    params: control.value.params,
+  };
+  console.log(body);
+  response = await POST(url, body);
+
+}
 </script>
 
 <template>
-  <h1> Timers:</h1>
+  <h1>Alarms:</h1>
+
+  <DeviceControl ref="control"/>
+  <div>
+    <input v-model="alarmTime" type="datetime-local" step="1"/>
+  </div>
+
+  <button @click="addAlarm">Add Alarm</button>
 </template>

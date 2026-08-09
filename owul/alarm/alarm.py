@@ -85,8 +85,8 @@ class Alarm:
         self.devices = data["devices"]
         self.date = data["date"]
         self.device_action = DeviceAction(data["action"], data["params"])
-        self.is_active = data["is_active"]
-        self.is_finished = data["is_finished"]
+        self.is_active = data.get("is_active", False)
+        self.is_finished = data.get("is_finished", False)
         self.uuid = data.get("uuid", str(uuid.uuid4()))
 
         alarm_datetime = datetime.datetime.fromisoformat(self.date)
