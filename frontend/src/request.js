@@ -2,12 +2,15 @@
 
 async function doRequest(url, method, body){
     let request = {
-        method: method
+        method: method,
+        headers: {
+            "Content-Type": "application/json",
+        },
     };
     if (body != null){
         request.body = JSON.stringify(body);
     }
-    response = await fetch(url, request);
+    let response = await fetch(url, request);
 
     if (!response.ok){
         throw new Error(`Response status code: ${response.status}`);
@@ -17,18 +20,20 @@ async function doRequest(url, method, body){
     return result;
 }
 
-async function GET(url){
+export async function GET(url){
     return doRequest(url, "GET", null)
 }
 
-async function POST(url, body=null){
+export async function POST(url, body=null){
     return doRequest(url, "POST", body)
 }
 
-async function PUT(url, body=null){
+export async function PUT(url, body=null){
     return doRequest(url, "PUT", body)
 }
 
-async function DELETE(url){
+export async function DELETE(url){
     return doRequest(url, "GET", null)
 }
+
+

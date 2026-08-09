@@ -30,7 +30,7 @@ def get_health() -> dict:
 
 def get_devices() -> list[str]:
     if MOCK_ZIGBEE:
-        return []
+        return ["test_device_1", "test_device_2"]
     msg = subscribe.simple("zigbee2mqtt/bridge/devices", hostname=hostname, port=port)
     devices = data_to_json(msg)
     device_list = [dev["friendly_name"] for dev in devices if dev["type"] != "Coordinator"]

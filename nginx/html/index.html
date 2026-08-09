@@ -5,10 +5,20 @@
 <h1>Hello World!</h1>
 
 
+<div>
+    <p>Control device</p>
+    <select></select>
+</div>
+
 <script src="request.js"></script>
 
 <script>
-    console.log(GET("./api/devices"))
+
+GET("/api/devices").then( devices => {
+
+}).catch(error => console.log("Failed to get devices"));
+
+
 </script>
 
 </body>

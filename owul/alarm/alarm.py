@@ -70,9 +70,9 @@ class DeviceAction:
         required_params = ["start", "stop", "duration"]
         self._ensure_params_exist(required_params)
 
-        start = self.params["start"]
-        stop = self.params["stop"]
-        duration = self.params["duration"]
+        start = float(self.params["start"])
+        stop = float(self.params["stop"])
+        duration = float(self.params["duration"])
         rate = (stop - start) / duration
         mqtt_client.set_device_brightness(device, start)
         mqtt_client.set_device_gradual_brightness(device, rate)

@@ -38,7 +38,6 @@ def device_brightness(device):
 @app.route("/devices/<device>/gradual_brightness", methods=["POST"])
 def device_gradual_brightness(device):
     ensure_device_exists(device)
-
     action = DeviceAction("gradual_brightness", request.get_json())
     action.perform_on_device(device)
     return NO_CONTENT
