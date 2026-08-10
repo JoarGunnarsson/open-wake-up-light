@@ -10,21 +10,21 @@ SLEEP_TIME = 1
 
 
 def update_alarms(alarms: dict):
-    for id, alarm_json in alarms.copy().items():
+    print(alarms, flush=True)
+    for id, alarm_json in alarms.items():
         alarm = Alarm(alarm_json)
-        if alarm.is_active:
-            continue
 
-        if alarm.has_passed():
-            print("Alarm has passed, removing it")
-            del alarms[id]
+        if not alarm.is_active:
+            print("Not active!", flush=True)
             continue
-
+        
         if alarm.not_yet_active():
+            print("Not yet active!", flush=True)
             continue
 
-        print("Starting the alarm!")
-        alarm.start()
+        print("Tick!", flush=True) 
+        alarm.tick()
+        alarms[id] = alarm.to_dict() 
 
 
 def run_alarms():

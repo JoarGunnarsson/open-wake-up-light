@@ -33,6 +33,8 @@ services:
       - local-network
     environment:
       - MOCK_ZIGBEE=$MOCK_ZIGBEE
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
 
   nginx:
     image: reverse-proxy

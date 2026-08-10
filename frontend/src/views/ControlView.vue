@@ -3,14 +3,18 @@ import { ref } from 'vue'
 import { GET, PUT, POST } from "../request.js"
 import DeviceControl from "../components/ControlComponent.vue"
 
-const control = ref(null);
+const data = ref({
+  device: null,
+  action: null,
+  params: {},
+  });
 
 async function controlDevice(){
-  let url = "/api/devices/" + control.value.selectedDevice;
+  let url = "/api/devices/" + data.value.device;
   
   var body = {
-    action: control.value.selectedAction,
-    params: control.value.params,
+    action: data.value.action,
+    params: data.value.params,
   };
   var response = await PUT(url, body)
 
@@ -21,7 +25,7 @@ async function controlDevice(){
 <template>
   <h1> Controls:</h1>
 
-  <DeviceControl ref="control"/>
+  <DeviceControl v-model:device="data.device" v-model:action="data.action" v-model:params="data.params"/>
 
   <button @click="controlDevice">Control Device</button>
 </template>

@@ -14,6 +14,20 @@ class AlarmActions:
     GRADUAL_BRIGHTNESS = "gradual_brightness"
 
 
+def current_time():
+    return datetime.datetime.now(tz=datetime.UTC).astimezone()
+
+
+def next_datetime(current: datetime.datetime, time: str) -> datetime.datetime:
+    hour, minute = time.split(":")
+    hour = int(hour)
+    minute = int(minute)
+    new_datetime = current.replace(hour=hour, minute=minute, second=0, microsecond=0, tzinfo=current.tzinfo)
+    while new_datetime <= current:
+        new_datetime = new_datetime + datetime.timedelta(days=1)
+    return new_datetime
+
+
 class DeviceAction:
     def __init__(self, action: str, params: dict):
         self.action = action
@@ -23,12 +37,17 @@ class DeviceAction:
         try:
             if self.action == AlarmActions.STATE:
                 self._handle_action_state(device)
+                return True
 
             elif self.action == AlarmActions.BRIGHTNESS:
                 self._handle_action_brightness(device)
+                return True
 
             elif self.action == AlarmActions.GRADUAL_BRIGHTNESS:
                 self._handle_action_gradual_brightness(device)
+                # TODO: This should perform a single brightness update, and return 
+                # True only if it has been completed.
+                return True
 
             else:
                 raise NotImplementedError(f"Action '{self.action}' has not been implemented")
@@ -78,49 +97,65 @@ class DeviceAction:
         mqtt_client.set_device_gradual_brightness(device, rate)
 
 
+
 class Alarm:
     def __init__(self, data: dict):
-
-        self.data = data
-        self.devices = data["devices"]
+        self.device = data["device"]
         self.date = data["date"]
         self.device_action = DeviceAction(data["action"], data["params"])
-        self.is_active = data.get("is_active", False)
-        self.is_finished = data.get("is_finished", False)
+        self.is_active = data.get("is_active", True)
         self.uuid = data.get("uuid", str(uuid.uuid4()))
 
-        alarm_datetime = datetime.datetime.fromisoformat(self.date)
-        self.timestamp = (alarm_datetime - datetime.datetime(1970,1,1, tzinfo=datetime.timezone.utc)) / datetime.timedelta(seconds=1)
+        self.is_recurring = False
+        for value in data["date"]["weekdays"].values():
+            if value:
+                self.is_recurring = True
+                break
+
+        if "next_activation" in data and data["next_activation"] != "":
+            self.datetime = datetime.datetime.fromisoformat(data["next_activation"])
+        else:
+            self.datetime = self.compute_next_datetime()
+        self.is_finished = False
 
     def to_dict(self):
         return {
-            "devices": self.devices,
+            "device": self.device,
             "date": self.date,
+            "next_activation": str(self.datetime),
             "action": self.device_action.action,
             "params": self.device_action.params,
             "is_active": self.is_active,
-            "is_finished": self.is_finished,
             "uuid": self.uuid,
-        }
+        } 
+
         
     def has_passed(self):
-        return self.is_finished or time.time() > self.timestamp + ALARM_GRACE_PERIOD
+        return current_time() > self.datetime + datetime.timedelta(seconds=ALARM_GRACE_PERIOD)
 
     def not_yet_active(self):
-        return self.timestamp > time.time()
-
-    def start(self):
-        self.data["is_active"] = True
-        thread = threading.Thread(target=self.run, daemon=True)
-        thread.start()
+        return self.datetime > current_time()
         
-    def run(self):
-        for device in self.devices:
-            self.device_action.perform_on_device(device)
+    def tick(self):
+        print(f"Ticking alarm: {self.to_dict()}", flush=True)
         
-        self.shutdown()
+        res = self.device_action.perform_on_device(self.device)
+        print(f"Res from device: {res}", flush=True)
+        self.is_finished |= res
 
-    def shutdown(self):
-        self.data["is_active"] = False
-        self.data["is_finished"] = True
-        self.is_finished = True
+        if self.is_finished:
+            print("FINISHED!", flush=True)
+            self.finish()
+
+    def finish(self):
+        if self.is_recurring:
+            self.datetime = self.compute_next_datetime()
+        else:
+            self.is_active = False
+            self.datetime = ""
+    
+    def compute_next_datetime(self):
+        if not self.is_recurring:
+            return next_datetime(current_time(), self.date["time"])
+        
+        pass

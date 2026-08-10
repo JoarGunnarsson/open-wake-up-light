@@ -30,6 +30,21 @@
   float: left;
 }
 
+.hidden {
+  position: absolute;
+  visibility: hidden;
+  opacity: 0;
+}
+
+
+input[type=checkbox]+label {
+  color: #ccc;
+}
+
+input[type=checkbox]:checked+label {
+  color: #f00;
+}
+
 #main {
   padding-left: 200px;
 }

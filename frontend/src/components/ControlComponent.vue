@@ -1,18 +1,35 @@
 
 
 <script setup>
-import { ref } from 'vue'
-import { GET, PUT, POST } from "../request.js"
+import { ref, watch } from 'vue'
+import { GET } from "../request.js"
 
-
-const emit = defineEmits(['controls-change']);
+const props = defineProps(["device", "action", "params"]);
+const emit = defineEmits(['select-device', 'select-action', 'edit-params']);
 
 const devices = ref(null);
-const selectedDevice = ref(null);
-
 const possibleActions = ref(["state", "brightness", "gradual_brightness"]);
-const selectedAction = ref(possibleActions.value[0]);
-const params = ref({state: "ON"});
+const selectedDevice = ref(null);
+const selectedAction = ref(null);
+
+
+if (props.device){
+  selectedDevice.value = props.device;
+}
+
+if (props.action){
+  selectedAction.value = props.action;
+}
+else{
+  selectedAction.value = possibleActions.value[0];
+
+}
+
+const params = ref({});
+if (props.params){
+  params.value = props.params;
+}
+
 
 async function getDevices(){
   let resp = await GET("/api/devices");
@@ -22,34 +39,65 @@ async function getDevices(){
   }
 }
 
-function selectDevice(device){
-  selectedDevice.value = device;
+const loading = ref(true);
+
+async function populate(){
+  if (!loading.value){
+    return;
+  }
+  await getDevices();
+  loading.value = false;
+
 }
 
-function selectAction(action){
-  selectedAction.value = action;
+populate();
+
+
+function emitDefaults(){
+  emit('select-device', selectedDevice);
+  emit('select-action', selectedAction);
+  emit('edit-params', params);
 }
+emitDefaults()
 
-defineExpose({
-  selectedDevice,
-  selectedAction,
-  params
-})
+watch(selectedAction, (newAction) => {
+  switch (newAction){
+    case 'state':
+      params.value = {
+        state: "ON"
+      };
+      break
 
-getDevices();
+    case 'brightness':
+      params.value = {
+        brightness: "254"
+      };
+      break
+
+    case 'gradual_brightness':
+      params.value = {
+        start: 0,
+        stop: 254, 
+        duration: 1800,
+      };
+      break
+  }
+  emit('edit-params', params);
+
+}, {immediate: true});
+
 </script>
 
 <template>
   <div>
     <div class="button_description">Device:</div>
-    <select class="deviceSelection" v-model="selectedDevice" @change="selectDevice(selectedDevice)">
+    <select class="deviceSelection" v-model="selectedDevice" @change="$emit('select-device', selectedDevice)">
       <option v-for="device in devices" :key="device">{{device}}</option>
     </select>
   </div>
-
   <div>
     <div class="button_description">Action:</div>
-    <select class="actionSelection" v-model="selectedAction" @change="selectAction(selectedAction)">
+    <select class="actionSelection" v-model="selectedAction" @change="$emit('select-action', selectedAction)">
       <option v-for="action in possibleActions" :key="action">{{action}}</option>
     </select>
   </div>

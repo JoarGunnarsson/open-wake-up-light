@@ -1,7 +1,6 @@
 <script setup>
 import { ref } from 'vue'
 
-const devices = ref(null);
 </script>
 
 <template>
