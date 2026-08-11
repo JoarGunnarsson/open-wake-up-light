@@ -1,0 +1,32 @@
+services:
+  open-wake-up-light:
+    image: open-wake-up-light
+    container_name: open-wake-up-light
+    restart: unless-stopped
+    networks:
+      - local-network
+    environment:
+      - MOCK_ZIGBEE=$MOCK_ZIGBEE
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+
+  nginx:
+    image: reverse-proxy
+    container_name: nginx
+    restart: unless-stopped
+    networks:
+      - local-network
+      - public
+    ports:
+      - "80:80"
+    volumes:
+      - ../frontend/:/data/dev/www
+      - ../nginx/conf/nginx_dev.conf:/etc/nginx/nginx.conf:ro
+
+networks:
+  local-network:
+    internal: true
+    driver: bridge
+
+  public:
+    driver: bridge

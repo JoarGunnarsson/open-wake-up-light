@@ -1,8 +1,8 @@
 dist
 
-
 __pycache__
 *.json
 .vscode
+node_modules
 
 venv
