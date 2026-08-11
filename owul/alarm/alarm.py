@@ -104,11 +104,11 @@ class Alarm:
         self.date = data["date"]
         self.device_action = DeviceAction(data["action"], data["params"])
         self.is_active = data.get("is_active", True)
-        self.uuid = data.get("uuid", str(uuid.uuid4()))
+        self.id = data.get("id", str(uuid.uuid4()))
 
-        self.is_recurring = False
-        for value in data["date"]["weekdays"].values():
-            if value:
+        self.is_recurring = True
+        for weekday in data["date"]["weekdays"]:
+            if weekday["value"]:
                 self.is_recurring = True
                 break
 
@@ -126,7 +126,7 @@ class Alarm:
             "action": self.device_action.action,
             "params": self.device_action.params,
             "is_active": self.is_active,
-            "uuid": self.uuid,
+            "id": self.id,
         } 
 
         
@@ -138,7 +138,7 @@ class Alarm:
         
     def tick(self):
         print(f"Ticking alarm: {self.to_dict()}", flush=True)
-        
+
         res = self.device_action.perform_on_device(self.device)
         print(f"Res from device: {res}", flush=True)
         self.is_finished |= res
@@ -157,5 +157,6 @@ class Alarm:
     def compute_next_datetime(self):
         if not self.is_recurring:
             return next_datetime(current_time(), self.date["time"])
-        
-        pass
+
+        # TODO: Compute it by checking weekdays
+        return next_datetime(current_time(), self.date["time"])

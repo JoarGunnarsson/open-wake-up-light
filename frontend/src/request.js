@@ -33,7 +33,7 @@ export async function PUT(url, body=null){
 }
 
 export async function DELETE(url){
-    return doRequest(url, "GET", null)
+    return doRequest(url, "DELETE", null)
 }
 
 

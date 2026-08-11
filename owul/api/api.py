@@ -45,7 +45,7 @@ def get_alarms():
 def get_alarm_data(id):
     alarms = database.get("alarms", {})
     if id not in alarms:
-        abort(400, "An alarm with that uuid does not exits")
+        abort(400, "An alarm with that id does not exist")
 
     return alarms[id]
 
@@ -54,7 +54,7 @@ def get_alarm_data(id):
 def delete_alarm(id):
     alarms = database.get("alarms")
     if id not in alarms:
-        abort(400, "An alarm with that uuid does not exits")
+        abort(400, "An alarm with that id does not exist")
 
     # If an alarm is already active, this will not turn it off
     del alarms[id]
@@ -73,7 +73,7 @@ def update_alarm(id):
     existing_alarms = database.get("alarms")
     alarm = Alarm(data)
     alarm_data = alarm.to_dict()
-    alarm_data["uuid"] = id
+    alarm_data["id"] = id
     existing_alarms[id] = alarm_data
     database.update("alarms", existing_alarms)
     return {}, 200
@@ -91,7 +91,7 @@ def create_alarm():
     alarm = Alarm(data)
     time_until_alarm = str(alarm.datetime -  current_time())
     alarm_data = alarm.to_dict()
-    existing_alarms[alarm_data["uuid"]] = alarm_data
+    existing_alarms[alarm_data["id"]] = alarm_data
     database.update("alarms", existing_alarms)
     return {"time_left": time_until_alarm}
 

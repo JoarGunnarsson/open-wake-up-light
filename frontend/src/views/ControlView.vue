@@ -16,7 +16,7 @@ async function controlDevice(){
     action: data.value.action,
     params: data.value.params,
   };
-  var response = await PUT(url, body)
+  await PUT(url, body);
 
 }
 
@@ -25,7 +25,13 @@ async function controlDevice(){
 <template>
   <h1> Controls:</h1>
 
-  <DeviceControl v-model:device="data.device" v-model:action="data.action" v-model:params="data.params"/>
+    <DeviceControl
+    :device="data.device"
+    :action="data.action"
+    :params="data.params"
+    @select-device="(device) => data.device = device" 
+    @select-action="(action) => data.action = action"  
+    @edit-params="(params) => data.params = params"/>
 
   <button @click="controlDevice">Control Device</button>
 </template>
