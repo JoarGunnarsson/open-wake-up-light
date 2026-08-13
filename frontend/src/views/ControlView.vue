@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { GET, PUT, POST } from "../request.js"
+import { PUT } from "../request.js"
 import DeviceControl from "../components/ControlComponent.vue"
 
 const data = ref({

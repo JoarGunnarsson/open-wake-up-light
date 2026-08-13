@@ -1,9 +1,9 @@
 from owul.database.database import database
 from owul.mqtt import mqtt_client
-from owul.alarm.alarm import DeviceAction, Alarm, current_time
+from owul.alarm import alarm
 
 from flask import Flask, abort, request
-
+import datetime
 
 app = Flask(__name__)
 
@@ -16,7 +16,7 @@ def ensure_device_exists(device):
 
 @app.route("/time", methods=["GET"])
 def get_time():
-    return {"time": str(current_time())}
+    return {"time": str(alarm.current_time())}
 
 
 @app.route("/devices", methods=["GET"])
@@ -31,14 +31,38 @@ def device_state(device):
     data = request.get_json()
     action = data["action"]
     params = data["params"]
-    action = DeviceAction(action, params)
-    action.perform_on_device(device)
+    alarm.do_action_on_device(action, params, device)
     return {}, 200
 
 
 @app.get("/alarms")
 def get_alarms():
     return database.get("alarms", {})
+
+
+@app.get("/alarms/next_alarm")
+def get_next_alarm():
+    min_time_left = None
+    closest_datetime = None
+
+    current_time = alarm.current_time()
+    for alarm_data in database.get("alarms").values():
+        if not alarm_data["is_active"]:
+            continue
+
+        time_left = alarm.parse_datetime_string(alarm_data["next_activation"]) - current_time
+        if time_left < datetime.timedelta(seconds=0):
+            print("Something has gone wrong, alarm with next activation in the past is still active", flush=True)
+            continue
+
+        if min_time_left is None or time_left < min_time_left:
+            min_time_left = time_left
+            closest_datetime = alarm_data["next_activation"]
+
+    if min_time_left is not None:
+        min_time_left = min_time_left.total_seconds()
+
+    return  {"datetime": closest_datetime, "time_left": min_time_left}
 
 
 @app.get("/alarms/<id>")
@@ -69,12 +93,14 @@ def update_alarm(id):
     if id not in alarms:
         abort(400, "Cannot set the alarm state of a non-existent alarm")
 
-    data = request.get_json()
+    alarm_data = request.get_json()
     existing_alarms = database.get("alarms")
-    alarm = Alarm(data)
-    alarm_data = alarm.to_dict()
-    alarm_data["id"] = id
-    existing_alarms[id] = alarm_data
+    if alarm_data["is_active"]:
+        alarm_data["next_activation"] = alarm.next_alarm_datetime(alarm_data)
+    else:
+        alarm_data["next_activation"] = ""
+
+    existing_alarms[id] |= alarm_data
     database.update("alarms", existing_alarms)
     return {}, 200
 
@@ -88,11 +114,13 @@ def create_alarm():
     ensure_device_exists(data["device"])
 
     existing_alarms = database.get("alarms")
-    alarm = Alarm(data)
-    time_until_alarm = str(alarm.datetime -  current_time())
-    alarm_data = alarm.to_dict()
-    existing_alarms[alarm_data["id"]] = alarm_data
+    new_alarm = alarm.create_alarm(data)
+
+    time_until_alarm = alarm.time_until_alarm(new_alarm)
+
+    existing_alarms[new_alarm["id"]] = new_alarm
     database.update("alarms", existing_alarms)
+
     return {"time_left": time_until_alarm}
 
 

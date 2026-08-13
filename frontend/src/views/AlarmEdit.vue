@@ -80,7 +80,7 @@ function close() {
 </script>
 
 <template>
-  <div v-if="!loading" style="background-color: aquamarine;">
+  <div v-if="!loading" class="weekdays-edit">
     <h1 v-if="props.id != null">Edit an alarm:</h1>
     <h1 v-else>Create an alarm:</h1>
 

@@ -1,8 +1,6 @@
 from owul.mqtt import mqtt_client
 
 import datetime
-import threading
-import time
 import uuid
 
 ALARM_GRACE_PERIOD = 10
@@ -28,135 +26,138 @@ def next_datetime(current: datetime.datetime, time: str) -> datetime.datetime:
     return new_datetime
 
 
-class DeviceAction:
-    def __init__(self, action: str, params: dict):
-        self.action = action
-        self.params = params
+def do_action_on_device(action: str, params: dict, device: str) -> bool:
+    try:
+        if action == AlarmActions.STATE:
+            _handle_action_state(params, device)
+            return True
 
-    def perform_on_device(self, device: str):
-        try:
-            if self.action == AlarmActions.STATE:
-                self._handle_action_state(device)
-                return True
+        elif action == AlarmActions.BRIGHTNESS:
+            _handle_action_brightness(params, device)
+            return True
 
-            elif self.action == AlarmActions.BRIGHTNESS:
-                self._handle_action_brightness(device)
-                return True
-
-            elif self.action == AlarmActions.GRADUAL_BRIGHTNESS:
-                self._handle_action_gradual_brightness(device)
-                # TODO: This should perform a single brightness update, and return 
-                # True only if it has been completed.
-                return True
-
-            else:
-                raise NotImplementedError(f"Action '{self.action}' has not been implemented")
-            
-        except Exception as e:
-            print(f"{e.__class__.__name__}: {e}")
-            raise
-
-    def _ensure_params_exist(self, required_params: list[str]):
-        for param in required_params:
-            if param not in self.params:
-                raise ValueError(f"Required parameter '{param} was missing")
-            
-    def _handle_action_state(self, device: str):
-        required_params = ["state"]
-        self._ensure_params_exist(required_params)
-        
-        state = self.params["state"]
-        if state == mqtt_client.LightStates.ON:
-            mqtt_client.power_on_device(device)
-
-        elif state == mqtt_client.LightStates.OFF:
-            mqtt_client.power_off_device(device)
-
-        elif state == mqtt_client.LightStates.TOGGLE:
-            mqtt_client.toggle_device(device)
+        elif action == AlarmActions.GRADUAL_BRIGHTNESS:
+            _handle_action_gradual_brightness(params, device)
+            # TODO: This should perform a single brightness update, and return 
+            # True only if it has been completed.
+            return True
 
         else:
-            raise ValueError(f"Invalid desired state '{state}")
-
-    def _handle_action_brightness(self, device: str):
-        required_params = ["brightness"]
-        self._ensure_params_exist(required_params)
-
-        brightness = self.params["brightness"]
-        mqtt_client.set_device_brightness(device, brightness)
-
-    def _handle_action_gradual_brightness(self, device: str):
-        required_params = ["start", "stop", "duration"]
-        self._ensure_params_exist(required_params)
-
-        start = float(self.params["start"])
-        stop = float(self.params["stop"])
-        duration = float(self.params["duration"])
-        rate = (stop - start) / duration
-        mqtt_client.set_device_brightness(device, start)
-        mqtt_client.set_device_gradual_brightness(device, rate)
+            raise NotImplementedError(f"Action '{action}' has not been implemented")
+        
+    except Exception as e:
+        print(f"{e.__class__.__name__}: {e}")
+        raise
 
 
-
-class Alarm:
-    def __init__(self, data: dict):
-        self.device = data["device"]
-        self.date = data["date"]
-        self.device_action = DeviceAction(data["action"], data["params"])
-        self.is_active = data.get("is_active", True)
-        self.id = data.get("id", str(uuid.uuid4()))
-
-        self.is_recurring = True
-        for weekday in data["date"]["weekdays"]:
-            if weekday["value"]:
-                self.is_recurring = True
-                break
-
-        if "next_activation" in data and data["next_activation"] != "":
-            self.datetime = datetime.datetime.fromisoformat(data["next_activation"])
-        else:
-            self.datetime = self.compute_next_datetime()
-        self.is_finished = False
-
-    def to_dict(self):
-        return {
-            "device": self.device,
-            "date": self.date,
-            "next_activation": str(self.datetime),
-            "action": self.device_action.action,
-            "params": self.device_action.params,
-            "is_active": self.is_active,
-            "id": self.id,
-        } 
+def _ensure_params_exist(params: dict, required_params: list[str]):
+    for param in required_params:
+        if param not in params:
+            raise ValueError(f"Required parameter '{param} was missing")
 
         
-    def has_passed(self):
-        return current_time() > self.datetime + datetime.timedelta(seconds=ALARM_GRACE_PERIOD)
-
-    def not_yet_active(self):
-        return self.datetime > current_time()
-        
-    def tick(self):
-        print(f"Ticking alarm: {self.to_dict()}", flush=True)
-
-        res = self.device_action.perform_on_device(self.device)
-        print(f"Res from device: {res}", flush=True)
-        self.is_finished |= res
-
-        if self.is_finished:
-            print("FINISHED!", flush=True)
-            self.finish()
-
-    def finish(self):
-        if self.is_recurring:
-            self.datetime = self.compute_next_datetime()
-        else:
-            self.is_active = False
-            self.datetime = ""
+def _handle_action_state(params: dict, device: str):
+    required_params = ["state"]
+    _ensure_params_exist(params, required_params)
     
-    def compute_next_datetime(self):
-        if not self.is_recurring:
-            return next_datetime(current_time(), self.date["time"])
+    state = params["state"]
+    if state == mqtt_client.LightStates.ON:
+        mqtt_client.power_on_device(device)
 
-        # TODO: Compute it by checking weekdays
-        return next_datetime(current_time(), self.date["time"])
+    elif state == mqtt_client.LightStates.OFF:
+        mqtt_client.power_off_device(device)
+
+    elif state == mqtt_client.LightStates.TOGGLE:
+        mqtt_client.toggle_device(device)
+
+    else:
+        raise ValueError(f"Invalid desired state '{state}")
+
+
+def _handle_action_brightness(params: dict, device: str):
+    required_params = ["brightness"]
+    _ensure_params_exist(params, required_params)
+
+    brightness = params["brightness"]
+    mqtt_client.set_device_brightness(device, brightness)
+
+
+def _handle_action_gradual_brightness(params, device: str):
+    required_params = ["start", "stop", "duration"]
+    _ensure_params_exist(params, required_params)
+
+    # TODO: start == 0 will turns off the light and does not set the gradual brightness.
+    # Perhaps sleep here, or wait until the bulb has updated its status
+    start = float(params["start"])
+    stop = float(params["stop"])
+    duration = float(params["duration"])
+    if duration == 0:
+        raise ValueError("A duration of 0 seconds is illegal")
+    
+    rate = (stop - start) / duration
+    mqtt_client.set_device_brightness(device, start)
+    mqtt_client.set_device_gradual_brightness(device, rate)
+
+
+def parse_datetime_string(time_str: str) -> datetime.datetime:
+    return datetime.datetime.fromisoformat(time_str)
+
+
+def is_active(alarm: dict) -> bool:
+    return alarm["is_active"]
+
+
+def triggers_in_the_future(alarm: dict) -> bool:
+    return parse_datetime_string(alarm["next_activation"]) > current_time()
+
+
+def tick(alarm: dict):
+    print(f"Ticking alarm: {alarm}", flush=True)
+
+    is_finished = do_action_on_device(alarm["action"], alarm["params"], alarm["device"])
+    print(f"Result from device: {is_finished}", flush=True)
+
+    if is_finished:
+        print("Alarm was finished!", flush=True)
+        alarm = finish_alarm(alarm)
+
+    return alarm
+
+
+def check_recurring(alarm: dict) -> bool:
+    for weekday in alarm["date"]["weekdays"]:
+        if weekday["value"]:
+            return True
+
+    return False
+
+
+def finish_alarm(alarm: dict) -> dict:
+    is_recurring = check_recurring(alarm)
+    print("alarm: ", alarm, "recurring:", is_recurring)
+    if is_recurring:
+        alarm["next_activation"] = next_alarm_datetime(alarm)
+    else:
+        alarm["is_active"] = False
+        alarm["next_activation"] = ""
+
+    return alarm
+
+
+def next_alarm_datetime(alarm: dict) -> str:
+    if not check_recurring(alarm):
+        return str(next_datetime(current_time(), alarm["date"]["time"]))
+
+    # TODO: Compute it by checking weekdays
+    return str(next_datetime(current_time(), alarm["date"]["time"]))
+
+
+def time_until_alarm(alarm: dict) -> str:
+    next_activation = parse_datetime_string(alarm["next_activation"])
+    return str(next_activation -  current_time())
+
+
+def create_alarm(data: dict) -> dict:
+    data["id"] = str(uuid.uuid4())
+    data["next_activation"] = next_alarm_datetime(data)
+    return data

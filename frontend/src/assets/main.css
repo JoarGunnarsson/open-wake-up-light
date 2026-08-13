@@ -36,13 +36,32 @@
   opacity: 0;
 }
 
-
-input[type=checkbox]+label {
+.weekday-unselected, input[type=checkbox]+label {
   color: #ccc;
 }
 
-input[type=checkbox]:checked+label {
-  color: #f00;
+.weekday-selected, input[type=checkbox]:checked+label {
+  color: coral;
+}
+
+.weekdays-container {
+  background-color: blue;
+  display: flex;
+}
+
+.weekdays-edit {
+  background-color: aquamarine;
+}
+
+.weekday {
+  margin: 1%;
+}
+
+.alarm-container {
+  margin-top: 10px; 
+  background-color: aquamarine; 
+  outline-style: solid; 
+  outline-width: 1px;
 }
 
 #main {

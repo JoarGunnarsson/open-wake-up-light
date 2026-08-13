@@ -12,20 +12,26 @@ if (props.weekdays != null){
 
 const emit = defineEmits(["edit-weekdays"]);
 
-watch(weekdays.value, (newWeekdays) => {
+function emitWeekdaysList(newWeekdays){
     emit('edit-weekdays', newWeekdays);
+}
+
+emitWeekdaysList(weekdays);
+
+watch(weekdays.value, (newWeekdays) => {
+    emitWeekdaysList(newWeekdays)
 })
 </script>
 
 <template>
-    <div style="background-color: blue;">
-        <div type="weekday" v-for="(weekday) in weekdays" :key="weekday">
+    <div class="weekdays-container">
+        <div class="weekday" v-for="(weekday) in weekdays" :key="weekday">
             <div v-if="editMode==true">
                 <input v-model="weekday.value" type="checkbox" class="hidden" :id="weekday.day + '_checkbox'">
                 <label :for="weekday.day + '_checkbox'">{{ weekday.day[0] }}</label>
             </div>
-            <span v-else-if="weekday.value" style="color: coral;">{{ weekday.day[0] }}</span>
-            <span v-else style="color: #592c1b;">{{ weekday.day[0] }}</span>
+            <span v-else-if="weekday.value" class="weekday-selected">{{ weekday.day[0] }}</span>
+            <span v-else class="weekday-unselected">{{ weekday.day[0] }}</span>
         </div>
     </div>
 </template>

@@ -1,6 +1,6 @@
 from owul.mqtt import mqtt_client
 from owul.database.database import database
-from owul.alarm.alarm import Alarm
+from owul.alarm import alarm
 from owul.api.api import app
 
 import threading
@@ -10,21 +10,15 @@ SLEEP_TIME = 1
 
 
 def update_alarms(alarms: dict):
-    print(alarms, flush=True)
     for id, alarm_json in alarms.items():
-        alarm = Alarm(alarm_json)
-
-        if not alarm.is_active:
-            print("Not active!", flush=True)
+        if not alarm.is_active(alarm_json):
             continue
         
-        if alarm.not_yet_active():
-            print("Not yet active!", flush=True)
+        if alarm.triggers_in_the_future(alarm_json):
             continue
 
-        print("Tick!", flush=True) 
-        alarm.tick()
-        alarms[id] = alarm.to_dict() 
+        alarm.tick(alarm_json)
+        alarms[id] = alarm_json
 
 
 def run_alarms():
