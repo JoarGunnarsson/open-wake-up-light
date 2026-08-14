@@ -4,8 +4,8 @@
 import { ref, watch } from 'vue'
 import { GET } from "../request.js"
 
-const props = defineProps(["device", "action", "params"]);
-const emit = defineEmits(['select-device', 'select-action', 'edit-params']);
+const props = defineProps(["device", "action", "params", "minutes_before"]);
+const emit = defineEmits(['select-device', 'select-action', 'edit-params', 'edit-minutes_before']);
 
 const devices = ref(null);
 const possibleActions = ref(["state", "brightness", "gradual_brightness"]);
@@ -30,6 +30,10 @@ if (props.params){
   params.value = props.params;
 }
 
+const minutes_before = ref(null);
+if (props.minutes_before){
+  minutes_before.value = props.minutes_before;
+}
 
 async function getDevices(){
   let resp = await GET("/api/devices");
@@ -57,6 +61,7 @@ function emitDefaults(){
   emit('select-device', selectedDevice);
   emit('select-action', selectedAction);
   emit('edit-params', params);
+  emit('edit-minutes_before', minutes_before);
 }
 emitDefaults()
 
@@ -77,8 +82,7 @@ watch(selectedAction, (newAction) => {
     case 'gradual_brightness':
       params.value = {
         start: 0,
-        stop: 254, 
-        duration: 1800,
+        stop: 254
       };
       break
   }
@@ -123,7 +127,8 @@ watch(selectedAction, (newAction) => {
       <div class="button_description">Stop brightness:</div> <input v-model="params.stop" type="text"/>
     </div>
     <div>
-      <div class="button_description">Duration:</div> <input v-model="params.duration" type="text"/>
+      <div class="button_description">Minutes before:</div>
+      <input type="number" v-model="minutes_before" @change="$emit('edit-minutes_before', minutes_before)">
     </div>
   </div>
 </template>

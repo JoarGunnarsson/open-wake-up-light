@@ -6,15 +6,10 @@ from owul.api.api import app
 import threading
 import time
 
-SLEEP_TIME = 1
-
 
 def update_alarms(alarms: dict):
     for id, alarm_json in alarms.items():
         if not alarm.is_active(alarm_json):
-            continue
-        
-        if alarm.triggers_in_the_future(alarm_json):
             continue
 
         alarm.tick(alarm_json)
@@ -30,7 +25,7 @@ def run_alarms():
     while True:
         alarms = database.get("alarms")
         current_time = time.monotonic()
-        desired_wake_time = current_time + SLEEP_TIME
+        desired_wake_time = current_time + alarm.SLEEP_TIME
 
         update_alarms(alarms)
         database.update("alarms", alarms)
@@ -46,3 +41,4 @@ def main():
     alarm_thread.start()
 
     app.run(host="0.0.0.0", port=9000)
+

@@ -4,6 +4,8 @@ from owul.alarm import alarm
 
 from flask import Flask, abort, request
 import datetime
+import time
+
 
 app = Flask(__name__)
 
@@ -31,7 +33,12 @@ def device_state(device):
     data = request.get_json()
     action = data["action"]
     params = data["params"]
-    alarm.do_action_on_device(action, params, device)
+    if action == alarm.AlarmActions.GRADUAL_BRIGHTNESS:
+        abort(400, "Device control does not support gradual_brightness")
+        
+    while not alarm.do_action_on_device(action, params, device, None):
+        time.sleep(alarm.SLEEP_TIME)
+   
     return {}, 200
 
 

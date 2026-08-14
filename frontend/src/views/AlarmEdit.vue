@@ -16,6 +16,7 @@ const data = ref({
     params: {},
     date: {weekdays: null, time:"07:00"},
     is_active: true,
+    minutes_before: null,
 });
 
 
@@ -53,6 +54,7 @@ function makeAlarmRequestData(){
       weekdays: data.value.date.weekdays,
       time: data.value.date.time,
     },
+    minutes_before: data.value.minutes_before,
   };
 }
 
@@ -88,9 +90,12 @@ function close() {
     :device="data.device"
     :action="data.action"
     :params="data.params"
+    :minutes_before="data.minutes_before"
     @select-device="(device) => data.device = device" 
     @select-action="(action) => data.action = action"  
-    @edit-params="(params) => data.params = params"/>
+    @edit-params="(params) => data.params = params"
+    @edit-minutes_before="(minutes_before) => data.minutes_before = minutes_before"
+    />
 
     <div>
       <div class="button_description">Alarm time:</div>

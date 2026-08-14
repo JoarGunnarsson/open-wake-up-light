@@ -4,7 +4,7 @@ import datetime
 import uuid
 
 ALARM_GRACE_PERIOD = 10
-
+SLEEP_TIME = 1
 
 class AlarmActions:
     STATE = "state"
@@ -16,17 +16,24 @@ def current_time():
     return datetime.datetime.now(tz=datetime.UTC).astimezone()
 
 
-def next_datetime(current: datetime.datetime, time: str, weekdays: list[int]) -> datetime.datetime:
+def next_datetime(current: datetime.datetime, time: str, weekdays: list[int] | None) -> datetime.datetime:
     hour, minute = time.split(":")
     hour = int(hour)
     minute = int(minute)
     new_datetime = current.replace(hour=hour, minute=minute, second=0, microsecond=0, tzinfo=current.tzinfo)
-    while new_datetime <= current or (not weekdays or new_datetime.weekday() not in weekdays):
+    while True:
+        if new_datetime > current:
+            if not weekdays:
+                break
+
+            if new_datetime.weekday() in weekdays:
+                break
+
         new_datetime = new_datetime + datetime.timedelta(days=1)
     return new_datetime
 
 
-def do_action_on_device(action: str, params: dict, device: str) -> bool:
+def do_action_on_device(action: str, params: dict, device: str, percent: float | None = None) -> bool:
     try:
         if action == AlarmActions.STATE:
             _handle_action_state(params, device)
@@ -37,10 +44,9 @@ def do_action_on_device(action: str, params: dict, device: str) -> bool:
             return True
 
         elif action == AlarmActions.GRADUAL_BRIGHTNESS:
-            _handle_action_gradual_brightness(params, device)
+            return _handle_action_gradual_brightness(params, device, percent)
             # TODO: This should perform a single brightness update, and return 
             # True only if it has been completed.
-            return True
 
         else:
             raise NotImplementedError(f"Action '{action}' has not been implemented")
@@ -82,21 +88,23 @@ def _handle_action_brightness(params: dict, device: str):
     mqtt_client.set_device_brightness(device, brightness)
 
 
-def _handle_action_gradual_brightness(params, device: str):
-    required_params = ["start", "stop", "duration"]
+def _handle_action_gradual_brightness(params, device: str, percent: float | None):
+    required_params = ["start", "stop"]
     _ensure_params_exist(params, required_params)
 
     # TODO: start == 0 will turns off the light and does not set the gradual brightness.
     # Perhaps sleep here, or wait until the bulb has updated its status
+    if percent is None:
+        percent = 0
+
     start = float(params["start"])
     stop = float(params["stop"])
-    duration = float(params["duration"])
-    if duration == 0:
-        raise ValueError("A duration of 0 seconds is illegal")
-    
-    rate = (stop - start) / duration
-    mqtt_client.set_device_brightness(device, start)
-    mqtt_client.set_device_gradual_brightness(device, rate)
+
+    current_brightness = (stop - start) * percent + start
+    current_brightness = min(stop, current_brightness)
+
+    mqtt_client.set_device_brightness(device, current_brightness)
+    return current_brightness >= stop
 
 
 def parse_datetime_string(time_str: str) -> datetime.datetime:
@@ -107,14 +115,30 @@ def is_active(alarm: dict) -> bool:
     return alarm["is_active"]
 
 
-def triggers_in_the_future(alarm: dict) -> bool:
-    return parse_datetime_string(alarm["next_activation"]) > current_time()
-
-
 def tick(alarm: dict):
     print(f"Ticking alarm: {alarm}", flush=True)
 
-    is_finished = do_action_on_device(alarm["action"], alarm["params"], alarm["device"])
+    next_activaton = alarm["next_activation"]
+    if not next_activaton:
+        return alarm
+
+    minutes_before = alarm.get("minutes_before", None) 
+    minutes_before = int(minutes_before) if minutes_before is not None else 0
+    time_for_first_action = parse_datetime_string(next_activaton) - datetime.timedelta(minutes=minutes_before) 
+
+    if time_for_first_action > current_time():
+        return alarm
+
+    if current_time() > parse_datetime_string(next_activaton) + datetime.timedelta(seconds=ALARM_GRACE_PERIOD):
+        print(f"Alarm has expired, and is more than {ALARM_GRACE_PERIOD} seconds old")
+        return finish_alarm(alarm)
+
+    percent = (current_time() - time_for_first_action).total_seconds() / (60 * minutes_before)
+    print(f"percent: {percent}", flush=True)
+    if percent > 1:
+        print("Larger than 100 percent!... Current time is probably after next_activation...")
+        
+    is_finished = do_action_on_device(alarm["action"], alarm["params"], alarm["device"], percent)
     print(f"Result from device: {is_finished}", flush=True)
 
     if is_finished:
@@ -145,7 +169,7 @@ def finish_alarm(alarm: dict) -> dict:
 
 def next_alarm_datetime(alarm: dict) -> str:
     if not check_recurring(alarm):
-        return str(next_datetime(current_time(), alarm["date"]["time"]))
+        return str(next_datetime(current_time(), alarm["date"]["time"], None))
 
     # TODO: Compute it by checking weekdays
     weekdays = []
