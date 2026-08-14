@@ -16,12 +16,12 @@ def current_time():
     return datetime.datetime.now(tz=datetime.UTC).astimezone()
 
 
-def next_datetime(current: datetime.datetime, time: str) -> datetime.datetime:
+def next_datetime(current: datetime.datetime, time: str, weekdays: list[int]) -> datetime.datetime:
     hour, minute = time.split(":")
     hour = int(hour)
     minute = int(minute)
     new_datetime = current.replace(hour=hour, minute=minute, second=0, microsecond=0, tzinfo=current.tzinfo)
-    while new_datetime <= current:
+    while new_datetime <= current or (not weekdays or new_datetime.weekday() not in weekdays):
         new_datetime = new_datetime + datetime.timedelta(days=1)
     return new_datetime
 
@@ -134,7 +134,6 @@ def check_recurring(alarm: dict) -> bool:
 
 def finish_alarm(alarm: dict) -> dict:
     is_recurring = check_recurring(alarm)
-    print("alarm: ", alarm, "recurring:", is_recurring)
     if is_recurring:
         alarm["next_activation"] = next_alarm_datetime(alarm)
     else:
@@ -149,7 +148,12 @@ def next_alarm_datetime(alarm: dict) -> str:
         return str(next_datetime(current_time(), alarm["date"]["time"]))
 
     # TODO: Compute it by checking weekdays
-    return str(next_datetime(current_time(), alarm["date"]["time"]))
+    weekdays = []
+    for weekday, day in enumerate(alarm["date"]["weekdays"]):
+        if day["value"]:
+            weekdays.append(weekday)
+
+    return str(next_datetime(current_time(), alarm["date"]["time"], weekdays))
 
 
 def time_until_alarm(alarm: dict) -> str:

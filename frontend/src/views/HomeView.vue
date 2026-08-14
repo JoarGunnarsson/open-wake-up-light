@@ -16,18 +16,45 @@ async function getNextAlarm(){
 
 function makeTimestampReadable(timestamp){
   var seconds_one_minute = 60;
+
+  if (timestamp < seconds_one_minute){
+    return "less than one minute";
+  }
+  timestamp = Math.ceil(timestamp / seconds_one_minute) * seconds_one_minute;
+  var resultString = "";
+
   var seconds_one_hour = seconds_one_minute * 60;
   var seconds_one_day = seconds_one_hour * 24;
   var seconds_left = timestamp;
+
   var days = Math.floor(seconds_left / seconds_one_day);
   seconds_left = seconds_left % seconds_one_day;
+  if (days != 0){
+
+    resultString += `${days} day`;
+    if (days != 1){
+      resultString += "s";
+    }
+    resultString += ", "
+  }
 
   var hours = Math.floor(seconds_left / seconds_one_hour);
   seconds_left = seconds_left % seconds_one_hour;
+  if (hours != 0 || resultString != ""){
+    resultString += `${hours} hour`;
+    if (hours != 1){
+      resultString += "s";
+    }
+    resultString += ", "
+  }
 
   var minutes = Math.floor(seconds_left / seconds_one_minute);
+  resultString += `${minutes} minute`;
+  if (minutes != 1){
+    resultString += "s";
+  }
 
-  return `${days} days, ${hours} hours, ${minutes} minutes`
+  return resultString;
 }
 
 
