@@ -89,7 +89,7 @@ def _handle_action_brightness(params: dict, device: str):
 
 
 def _handle_action_gradual_brightness(params, device: str, percent: float | None):
-    required_params = ["start", "stop"]
+    required_params = ["start_brightness", "stop_brightness"]
     _ensure_params_exist(params, required_params)
 
     # TODO: start == 0 will turns off the light and does not set the gradual brightness.
@@ -97,14 +97,14 @@ def _handle_action_gradual_brightness(params, device: str, percent: float | None
     if percent is None:
         percent = 0
 
-    start = float(params["start"])
-    stop = float(params["stop"])
+    start_brightness = params["start_brightness"]
+    stop_brightness = params["stop_brightness"]
 
-    current_brightness = (stop - start) * percent + start
-    current_brightness = min(stop, current_brightness)
+    current_brightness = (stop_brightness - start_brightness) * percent + start_brightness
+    current_brightness = min(stop_brightness, current_brightness)
 
     mqtt_client.set_device_brightness(device, current_brightness)
-    return current_brightness >= stop
+    return current_brightness >= stop_brightness
 
 
 def parse_datetime_string(time_str: str) -> datetime.datetime:
@@ -116,8 +116,6 @@ def is_active(alarm: dict) -> bool:
 
 
 def tick(alarm: dict):
-    print(f"Ticking alarm: {alarm}", flush=True)
-
     next_activaton = alarm["next_activation"]
     if not next_activaton:
         return alarm
@@ -130,7 +128,7 @@ def tick(alarm: dict):
         return alarm
 
     if current_time() > parse_datetime_string(next_activaton) + datetime.timedelta(seconds=ALARM_GRACE_PERIOD):
-        print(f"Alarm has expired, and is more than {ALARM_GRACE_PERIOD} seconds old")
+        print(f"Alarm has passed, and is more than {ALARM_GRACE_PERIOD} seconds old")
         return finish_alarm(alarm)
 
     percent = (current_time() - time_for_first_action).total_seconds() / (60 * minutes_before)

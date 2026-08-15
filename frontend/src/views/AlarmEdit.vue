@@ -8,9 +8,8 @@ import { useRouter} from 'vue-router';
 const router = useRouter();
 const props = defineProps(["id"]);
 
-const weekdaySelection = ref(null);
-
 const data = ref({
+    name: "",
     device: null,
     action: null,
     params: {},
@@ -44,33 +43,17 @@ async function populate(){
 
 populate();
 
-function makeAlarmRequestData(){
-  return {
-    device: data.value.device,
-    action: data.value.action,
-    params: data.value.params,
-    is_active: data.value.is_active,
-    date: {
-      weekdays: data.value.date.weekdays,
-      time: data.value.date.time,
-    },
-    minutes_before: data.value.minutes_before,
-  };
-}
-
 
 async function createAlarm(){
   let url = "/api/alarms/create";
-  var body = makeAlarmRequestData();
-  await POST(url, body);
+  await POST(url, data.value);
   close();
 }
 
 
 async function updateAlarm(){
   let url = "/api/alarms/update/" + props.id;
-  var body = makeAlarmRequestData();
-  await PUT(url, body);
+  await PUT(url, data.value);
   close();
 }
 
@@ -86,6 +69,9 @@ function close() {
     <h1 v-if="props.id != null">Edit an alarm:</h1>
     <h1 v-else>Create an alarm:</h1>
 
+    <div>
+      <div class="button_description">Name:</div> <input v-model="data.name" type="text"/>
+    </div>
     <DeviceControl
     :device="data.device"
     :action="data.action"

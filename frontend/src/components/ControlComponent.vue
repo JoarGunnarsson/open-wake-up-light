@@ -30,7 +30,7 @@ if (props.params){
   params.value = props.params;
 }
 
-const minutes_before = ref(null);
+const minutes_before = ref(0);
 if (props.minutes_before){
   minutes_before.value = props.minutes_before;
 }
@@ -75,14 +75,14 @@ watch(selectedAction, (newAction) => {
 
     case 'brightness':
       params.value = {
-        brightness: "254"
+        brightness: 254
       };
       break
 
     case 'gradual_brightness':
       params.value = {
-        start: 0,
-        stop: 254
+        start_brightness: 0,
+        stop_brightness: 254
       };
       break
   }
@@ -116,15 +116,15 @@ watch(selectedAction, (newAction) => {
   </div>
 
   <div v-else-if="selectedAction=='brightness'">
-    <div class="button_description">Brightness:</div><input v-model="params.brightness" type="text"/>
+    <div class="button_description">Brightness:</div><input v-model="params.brightness" type="number"/>
   </div>
 
   <div v-else-if="selectedAction=='gradual_brightness'">
     <div>
-      <div class="button_description">Start brightness:</div> <input v-model="params.start" type="text"/>
+      <div class="button_description">Start brightness:</div> <input v-model="params.start_brightness" type="number"/>
     </div>
     <div>
-      <div class="button_description">Stop brightness:</div> <input v-model="params.stop" type="text"/>
+      <div class="button_description">Stop brightness:</div> <input v-model="params.stop_brightness" type="number"/>
     </div>
     <div>
       <div class="button_description">Minutes before:</div>

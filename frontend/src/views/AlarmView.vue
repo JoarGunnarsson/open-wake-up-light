@@ -45,6 +45,7 @@ populate();
   <button @click="router.push('/alarms/create')">Create Alarm</button>
   <div v-if="!loading">
     <div v-for="(value, key) in alarms" class="alarm-container">
+      <div v-if="value.name != ''"> {{ value.name }}</div>
       <div v-if="value.next_activation != ''"> {{ formatDatetime(value.next_activation)  }}</div>
       <div v-else> {{ value.date.time }}</div>
       <WeekdayPicker 
