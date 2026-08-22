@@ -23,6 +23,10 @@ async function fillAlarmData(){
   if (props.id != null){
     data.value = await GET("/api/alarms/" + props.id);
   }
+  else{
+    var response = await GET("/api/devices");
+    data.value.device = response.devices[0];
+  }
 }
 
 const loading = ref(true);
@@ -65,7 +69,7 @@ function close() {
 </script>
 
 <template>
-  <div v-if="!loading" class="weekdays-edit">
+  <div v-if="!loading" class="alarm-edit">
     <h1 v-if="props.id != null">Edit an alarm:</h1>
     <h1 v-else>Create an alarm:</h1>
 

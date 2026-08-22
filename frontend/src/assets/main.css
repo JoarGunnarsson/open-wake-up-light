@@ -49,12 +49,13 @@
   display: flex;
 }
 
-.weekdays-edit {
-  background-color: aquamarine;
-}
-
 .weekday {
   margin: 1%;
+}
+
+
+.alarm-edit {
+  background-color: aquamarine;
 }
 
 .alarm-container {

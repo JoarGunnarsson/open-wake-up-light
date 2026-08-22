@@ -43,18 +43,7 @@ async function getDevices(){
   }
 }
 
-const loading = ref(true);
-
-async function populate(){
-  if (!loading.value){
-    return;
-  }
-  await getDevices();
-  loading.value = false;
-
-}
-
-populate();
+getDevices();
 
 
 function emitDefaults(){
