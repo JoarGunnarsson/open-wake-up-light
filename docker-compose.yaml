@@ -16,7 +16,6 @@ services:
       - /dev/ttyACM0:/dev/ttyACM0
     networks:
       - local-network
-      - public
     ports:
       - "8080:8080"
     volumes:

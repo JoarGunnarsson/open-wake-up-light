@@ -23,10 +23,6 @@ async function fillAlarmData(){
   if (props.id != null){
     data.value = await GET("/api/alarms/" + props.id);
   }
-  else{
-    var response = await GET("/api/devices");
-    data.value.device = response.devices[0];
-  }
 }
 
 const loading = ref(true);
