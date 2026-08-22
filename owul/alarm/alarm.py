@@ -131,7 +131,11 @@ def tick(alarm: dict):
         print(f"Alarm has passed, and is more than {ALARM_GRACE_PERIOD} seconds old")
         return finish_alarm(alarm)
 
-    percent = (current_time() - time_for_first_action).total_seconds() / (60 * minutes_before)
+    if minutes_before == 0:
+        percent = 1 if current_time() > time_for_first_action else 0
+    else:
+        percent = (current_time() - time_for_first_action).total_seconds() / (60 * minutes_before)
+        
     print(f"percent: {percent}", flush=True)
     if percent > 1:
         print("Larger than 100 percent!... Current time is probably after next_activation...")

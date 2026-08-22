@@ -13,7 +13,7 @@ async function updateAlarm(alarmData){
   let url = "/api/alarms/update/" + alarmData.id;
   var body = alarmData;
   await PUT(url, body);
-  close();
+  await getAlarms();
 }
 
 
