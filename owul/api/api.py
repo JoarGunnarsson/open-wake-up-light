@@ -168,7 +168,7 @@ complete_alarm_model = api.model(
 )
 
 @api.route("/alarms/update/<alarm_id>")
-class AlarmCreation(Resource):
+class AlarmEdit(Resource):
     @api.expect(complete_alarm_model, validate=True)
     def put(self, alarm_id):
         # TODO: Perhaps always set it to active when updating it?

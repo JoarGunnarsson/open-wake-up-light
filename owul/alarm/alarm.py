@@ -135,7 +135,7 @@ def tick(alarm: dict):
         percent = 1 if current_time() > time_for_first_action else 0
     else:
         percent = (current_time() - time_for_first_action).total_seconds() / (60 * minutes_before)
-        
+
     print(f"percent: {percent}", flush=True)
     if percent > 1:
         print("Larger than 100 percent!... Current time is probably after next_activation...")
@@ -182,12 +182,18 @@ def next_alarm_datetime(alarm: dict) -> str:
     return str(next_datetime(current_time(), alarm["date"]["time"], weekdays))
 
 
-def time_until_alarm(alarm: dict) -> str:
+def time_until_alarm(alarm: dict) -> str | None:
+    if not alarm["is_active"]:
+        return None
     next_activation = parse_datetime_string(alarm["next_activation"])
     return str(next_activation -  current_time())
 
 
 def create_alarm(data: dict) -> dict:
     data["id"] = str(uuid.uuid4())
-    data["next_activation"] = next_alarm_datetime(data)
+    if data["is_active"]:
+        data["next_activation"] = next_alarm_datetime(data)
+    else:
+        data["next_activation"] = ""
+
     return data
