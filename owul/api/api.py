@@ -1,6 +1,7 @@
 from owul.database.database import database
 from owul.mqtt import mqtt_client
 from owul.alarm import alarm
+import owul.api.custom_validation as cv
 
 from flask import Flask, abort, request
 from flask_restx import Api, Namespace, Resource, fields
@@ -8,10 +9,8 @@ from flask_restx import Api, Namespace, Resource, fields
 import datetime
 import time
 
-
 app = Flask(__name__)
-
-api = Api(app)
+api = Api(app, format_checker=cv.custom_checker)
 ns = Namespace('')
 
 
@@ -134,10 +133,11 @@ weekday_field_model = api.model(
 date_data_model = api.model(
     'Date',
     {
-        'time': fields.String(required=True),
+        'time': cv.Time(required=True),
         'weekdays': fields.List(fields.Nested(weekday_field_model, required=True))
     }, strict=True
 )
+
 
 new_alarm_model = api.model(
     'AlarmCreation', 
@@ -162,7 +162,7 @@ complete_alarm_model = api.model(
         'is_active': fields.Boolean(required=True),
         'date': fields.Nested(date_data_model, required=True),
         'minutes_before': fields.Integer(required = True),
-        'next_activation': fields.String(required=True),
+        'next_activation': cv.DateTime(required=True),
         "id": fields.String(required=True),
     }, strict=True
 )

@@ -37,6 +37,7 @@ async function populate(){
   }
   catch {
     console.log("Failed to fetch alarm");
+    close();
   }
   
 }
