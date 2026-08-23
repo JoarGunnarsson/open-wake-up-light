@@ -1,6 +1,8 @@
-dist/*
+dist
 
-*.pyc
-__pycache__/*
+__pycache__
+*.json
+.vscode
+node_modules
 
-venv/*
+venv

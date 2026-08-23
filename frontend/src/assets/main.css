@@ -1,0 +1,70 @@
+.sidenav {
+  height: 100%;
+  position: fixed;
+  width: 200px;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  padding-top: 60px;
+}
+
+/* The navigation menu links */
+.sidenav a {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+  transition: 0.3s;
+}
+
+/* When you mouse over the navigation links, change their color */
+.sidenav a:hover {
+  color: #f1f1f1;
+}
+
+
+.button_description {
+  float: left;
+}
+
+.hidden {
+  position: absolute;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.weekday-unselected, input[type=checkbox]+label {
+  color: #ccc;
+}
+
+.weekday-selected, input[type=checkbox]:checked+label {
+  color: coral;
+}
+
+.weekdays-container {
+  background-color: blue;
+  display: flex;
+}
+
+.weekday {
+  margin: 1%;
+}
+
+
+.alarm-edit {
+  background-color: aquamarine;
+}
+
+.alarm-container {
+  margin-top: 10px; 
+  background-color: aquamarine; 
+  outline-style: solid; 
+  outline-width: 1px;
+}
+
+#main {
+  padding-left: 200px;
+}

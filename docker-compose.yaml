@@ -1,0 +1,56 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto
+    container_name: mosquitto
+    restart: unless-stopped
+    networks:
+      - local-network
+    ports:
+      - "1883:1883"
+
+  zigbee2mqtt:
+    image: ghcr.io/koenkk/zigbee2mqtt
+    container_name: zigbee2mqtt
+    restart: unless-stopped
+    devices:
+      - /dev/ttyACM0:/dev/ttyACM0
+    networks:
+      - local-network
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./z2m/data:/app/data
+      - /run/udev:/run/udev:ro
+    environment:
+      - TZ=Europe/Amsterdam
+
+  open-wake-up-light:
+    image: open-wake-up-light
+    container_name: open-wake-up-light
+    restart: unless-stopped
+    networks:
+      - local-network
+    environment:
+      - MOCK_ZIGBEE=$MOCK_ZIGBEE
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+
+  nginx:
+    image: reverse-proxy
+    container_name: nginx
+    restart: unless-stopped
+    networks:
+      - local-network
+      - public
+    ports:
+      - "80:80"
+      - "443:443"
+
+    
+networks:
+  local-network:
+    internal: true
+    driver: bridge
+
+  public:
+    driver: bridge
