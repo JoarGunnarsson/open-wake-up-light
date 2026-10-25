@@ -84,7 +84,11 @@ def _handle_action_brightness(params: dict, device: str):
     required_params = ["brightness"]
     _ensure_params_exist(params, required_params)
 
-    brightness = params["brightness"]
+    brightness = round(params["brightness"])
+    if brightness == 0:
+        _handle_action_state({"state": mqtt_client.LightStates.OFF}, device)
+        return
+    
     mqtt_client.set_device_brightness(device, brightness)
 
 
@@ -101,8 +105,13 @@ def _handle_action_gradual_brightness(params, device: str, percent: float | None
     stop_brightness = params["stop_brightness"]
 
     current_brightness = (stop_brightness - start_brightness) * percent + start_brightness
-    current_brightness = min(stop_brightness, current_brightness)
+    current_brightness = round(min(stop_brightness, current_brightness))
 
+    if current_brightness == 0:
+        _handle_action_state({"state": mqtt_client.LightStates.OFF}, device)
+        return
+
+    print("ahhh", current_brightness, flush=True)
     mqtt_client.set_device_brightness(device, current_brightness)
     return current_brightness >= stop_brightness
 
